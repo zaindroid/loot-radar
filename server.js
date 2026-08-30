@@ -24,11 +24,28 @@ const PORT = process.env.PORT ? Number(process.env.PORT) : 8080;
 const HOST = process.env.HOST || '0.0.0.0';
 const ROOT = __dirname;
 const PUBLIC = path.join(ROOT, 'public');
-const DATA = process.env.DATA_DIR || path.join(ROOT, 'data');
-const UPLOADS = process.env.UPLOADS_DIR || path.join(ROOT, 'uploads');
+
+// State dirs: honour DATA_DIR/UPLOADS_DIR when the platform sets them;
+// otherwise use ./data, but fall back to an OS-writable location if the
+// working tree is read-only (e.g. nixpacks runtimes). Statelessness is
+// acceptable -- the app re-seeds via node seed.js on a fresh start.
+function resolveStateDir(envName, preferred) {
+  const candidates = [process.env[envName], preferred,
+    path.join(require('node:os').tmpdir(), `loot-radar-${path.basename(preferred)}`)];
+  for (const dir of candidates) {
+    if (!dir) continue;
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+      const probe = path.join(dir, '.w');
+      fs.writeFileSync(probe, '1'); fs.unlinkSync(probe);
+      return dir;
+    } catch {}
+  }
+  throw new Error(`no writable state dir for ${envName}`);
+}
+const DATA = resolveStateDir('DATA_DIR', path.join(ROOT, 'data'));
+const UPLOADS = resolveStateDir('UPLOADS_DIR', path.join(ROOT, 'uploads'));
 const MAPS = process.env.MAPS_DIR || path.join(ROOT, 'maps');
-fs.mkdirSync(DATA, { recursive: true });
-fs.mkdirSync(UPLOADS, { recursive: true });
 
 /* ----------------------------- database ----------------------------- */
 const db = new DatabaseSync(path.join(DATA, 'loot.db'));
@@ -625,6 +642,6 @@ server.listen(PORT, HOST, () => {
   }));
   console.log(JSON.stringify({
     ts: new Date().toISOString(), level: 'info', event: 'serving',
-    url: `http://${HOST}:${PORT}`, mapsDir: MAPS,
+    url: `http://${HOST}:${PORT}`, dataDir: DATA, uploadsDir: UPLOADS, mapsDir: MAPS,
   }));
 });
