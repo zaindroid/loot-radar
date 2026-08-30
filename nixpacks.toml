@@ -1,0 +1,13 @@
+# Nixpacks build config (zorc builds this repo with nixpacks, ignoring the
+# Dockerfile). We MUST run on Node 22.x where `node:sqlite` is built in.
+#
+# Problem: nixpacks defaults to an older Node (18) unless told otherwise, and
+# even requesting major "22" can resolve to a patch from the *default* nixpkgs
+# archive that lacks node:sqlite. Requesting the major version via .nvmrc /
+# engines.node is not sufficient on all nixpacks/Coolify versions.
+#
+# Reliable fix (per Coolify "Node.js Versioning" docs): pin the nixpkgs archive
+# to a commit whose Node.js is >= 22.5. 51ad838b... provides Node 22.13.1,
+# which has built-in node:sqlite with no flag.
+[phases.setup]
+nixpkgsArchive = "51ad838b03a05b1de6f9f2a0fffecee64a9788ee"
