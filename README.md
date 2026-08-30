@@ -12,9 +12,9 @@ process.
 ## Run it
 
 ```bash
-node server.js          # http://localhost:4141  (override with PORT)
-node seed.js            # optional: seed clean demo loot
-node tests/api.test.js  # integration test (ephemeral port + temp DB)
+node server.js            # defaults to :8080 (platform port) — local dev: PORT=4141 node server.js
+node seed.js              # optional: seed clean demo loot
+node tests/api.test.js    # integration test (ephemeral port + temp DB)
 ```
 
 ## Zorc platform contract

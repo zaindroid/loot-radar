@@ -17,7 +17,10 @@ const crypto = require('node:crypto');
 const zlib = require('node:zlib');
 const { DatabaseSync } = require('node:sqlite');
 
-const PORT = process.env.PORT ? Number(process.env.PORT) : 4141;
+// Default to 8080: that's the platform (Coolify/zorc) convention -- the
+// reverse proxy and health probes route to the app.yaml port. Override with
+// PORT for local dev (PORT=4141 node server.js).
+const PORT = process.env.PORT ? Number(process.env.PORT) : 8080;
 const HOST = process.env.HOST || '0.0.0.0';
 const ROOT = __dirname;
 const PUBLIC = path.join(ROOT, 'public');
