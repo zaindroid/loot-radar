@@ -1,0 +1,37 @@
+name: loot-radar
+description: Live gamescom 2026 loot-drop radar. Zero-dep Node 22 server (node:sqlite), REST + SSE, static SPA.
+owner: zaindroid
+
+runtime:
+  port: 8080
+  memory_mb: 256
+  replicas: 1
+
+domains:
+  staging: loot-radar.staging.apps.example.com
+  production: loot-radar.apps.example.com
+
+dependencies:
+  postgres: false
+  redis: false
+  storage: false
+  internal: []
+
+provides:
+  - id: loot-radar
+    operations:
+      - GET /health
+      - GET /ready
+      - GET /version
+      - GET /openapi.json
+      - GET /api/loot
+      - POST /api/loot
+      - GET /api/leaderboard
+      - POST /api/upload
+      - GET /api/stream
+
+health:
+  path: /health
+
+# No custom env needed: APP_ENV / LOG_LEVEL are auto-provided by the platform.
+# SQLite is embedded (node:sqlite); /data and /uploads are on the container fs.

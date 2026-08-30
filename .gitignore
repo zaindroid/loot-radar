@@ -1,0 +1,24 @@
+node_modules/
+data/
+uploads/
+*.db
+*.db-wal
+*.db-shm
+.DS_Store
+
+# dev scratch (kept out of the repo)
+e2e*.py
+shots*.py
+inspect*.py
+detect_*.py
+*_v.jpg
+*_v.png
+tile_*.jpg
+t_*.jpg
+g_*.jpg
+venue*.jpg
+c10*.jpg
+ref_*.jpg
+hall_*.jpg
+pdfpage*.jpg
+hall-plan.txt

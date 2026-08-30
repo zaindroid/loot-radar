@@ -1,0 +1,29 @@
+# Build context is the repo root (where the Dockerfile lives).
+# Keep the image lean: skip VCS, local state, scratch files and the dev tooling.
+.git
+.gitignore
+*.md
+!.github
+node_modules
+data
+uploads
+*.db
+*.db-wal
+*.db-shm
+.DS_Store
+# scratch / scratch-off dev artifacts (screenshots, detection scripts, venv)
+e2e*
+shot*
+shots*
+inspect*
+detect*
+tile*
+t_*
+g_*
+venue*
+c10*
+ref*
+hall*
+pdfpage*
+.venv
+__pycache__

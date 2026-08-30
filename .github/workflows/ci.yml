@@ -1,0 +1,31 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # Zero-dependency app: no npm install.
+      - name: Syntax check
+        run: |
+          node --check server.js
+          node --check public/app.js
+          node --check seed.js
+      - name: Integration test
+        run: node tests/api.test.js
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image (smoke)
+        run: docker build -f Dockerfile -t loot-radar:ci .

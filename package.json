@@ -1,0 +1,16 @@
+{
+  "name": "loot-radar",
+  "version": "1.0.0",
+  "description": "Live gamescom 2026 loot-drop radar — zero-dependency Node 22 server (node:sqlite), REST + SSE, static SPA.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node seed.js",
+    "test": "node tests/api.test.js"
+  },
+  "engines": {
+    "node": ">=22.23.0"
+  },
+  "license": "MIT"
+}
