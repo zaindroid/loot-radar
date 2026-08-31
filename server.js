@@ -15,7 +15,23 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const zlib = require('node:zlib');
-const { DatabaseSync } = require('node:sqlite');
+// SQLite: node:sqlite is built in to Node >= 22.5. On some 22.x builds the
+// module still needs the --experimental-sqlite flag (the start script sets it,
+// and newer Node accepts it as a no-op), so we require it here and fail with a
+// loud, structured log line if the runtime doesn't provide it.
+let DatabaseSync;
+try {
+  ({ DatabaseSync } = require('node:sqlite'));
+} catch (e) {
+  // Retry once through the flag-gated name is not possible post-launch, so
+  // emit an unmistakable fatal record and exit non-zero.
+  console.log(JSON.stringify({
+    ts: new Date().toISOString(), level: 'fatal', event: 'sqlite_unavailable',
+    node: process.version, error: String(e && e.message || e),
+    hint: 'need Node >= 22.5 (nixpacks should honour .nvmrc/nixpacks.toml)',
+  }));
+  process.exit(1);
+}
 
 // Default to 8080: that's the platform (Coolify/zorc) convention -- the
 // reverse proxy and health probes route to the app.yaml port. Override with
