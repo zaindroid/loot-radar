@@ -138,6 +138,55 @@ const q = {
   myComments: db.prepare('SELECT COUNT(*) c FROM comments WHERE looter = ?'),
 };
 
+/* First-boot autoseed: when the loot table is empty (fresh container, no
+   persistent volume), populate it with the demo dataset so the map is alive
+   immediately. Skipped if the operator sets NO_AUTOSEED=1. */
+if (process.env.NO_AUTOSEED !== '1') {
+  try {
+    const empty = db.prepare('SELECT COUNT(*) c FROM loot').get().c === 0;
+    if (empty) {
+      const { DEMO_LOOTERS, DEMO_LOOT, DEMO_COMMENTS, HALL_XY } = require('./seed_data');
+      const t0 = Date.now();
+      let t = 0;
+      const ts = () => t0 - (t++ * 37000);
+      const seen = new Set();
+      const ids = [];
+      for (const [looter, hall, stand, company, item, rarity, dx, dy] of DEMO_LOOT) {
+        if (!seen.has(looter)) { seen.add(looter); q.ensureLooter.run(looter, looter, ts()); }
+        const [hx, hy] = HALL_XY[hall] || [0.5, 0.5];
+        const x = Math.min(0.99, Math.max(0.01, hx + dx));
+        const y = Math.min(0.99, Math.max(0.01, hy + dy));
+        const r = q.insertLoot.run(looter, hall, stand, company, item, rarity, x, y, '', ts());
+        ids.push(Number(r.lastInsertRowid));
+      }
+      let v = 0;
+      for (let i = 0; i < ids.length; i++) {
+        const rar = DEMO_LOOT[i][5];
+        let n = rar >= 5 ? 4 + Math.floor(Math.random() * 9)
+              : rar === 4 ? 2 + Math.floor(Math.random() * 7)
+              : rar === 3 ? 1 + Math.floor(Math.random() * 5)
+              : Math.floor(Math.random() * 3);
+        for (let k = 0; k < n; k++) q.upvote.run(`u${v++}:${Math.random().toString(16).slice(2, 6)}`, ids[i], ts());
+      }
+      db.exec('UPDATE loot SET upvotes = (SELECT COUNT(*) FROM votes WHERE votes.loot_id = loot.id)');
+      for (const [i, l, txt] of DEMO_COMMENTS) q.comment.run(ids[i], l, txt, ts());
+      q.crewAdd.run('zain', 'mira', ts());
+      q.crewAdd.run('zain', 'kai', ts());
+      q.crewAdd.run('mira', 'nova', ts());
+      console.log(JSON.stringify({
+        ts: new Date().toISOString(), level: 'info', event: 'autoseed',
+        loot: DEMO_LOOT.length, looters: DEMO_LOOTERS.length,
+        note: 'fresh DB populated with demo dataset',
+      }));
+    }
+  } catch (e) {
+    console.error(JSON.stringify({
+      ts: new Date().toISOString(), level: 'warn', event: 'autoseed_failed',
+      error: String(e && e.message || e),
+    }));
+  }
+}
+
 /* --------------------------- level & badges --------------------------- */
 const LEVELS = [0, 300, 800, 1600, 3000, 5000, 8000, 12500, 18000, 25000];
 function levelFor(xp) {
